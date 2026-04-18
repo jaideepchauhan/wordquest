@@ -1,14 +1,12 @@
 # Hanudhwaj's Word Quest
 
-Word Quest is a React + Vite spelling practice app for Grade 3 preparation. It now includes a small Node/Express server so the Gemini API key stays on the server instead of being exposed in the browser bundle.
+Word Quest is a React + Vite spelling practice app for Grade 3 preparation. Definitions and example sentences now live inside the project, so the app does not need Gemini or any backend API to run.
 
 ## Stack
 
 - React 19
 - Vite 6
 - Tailwind CSS 4
-- Express 4
-- Gemini via `@google/genai`
 
 ## Local development
 
@@ -16,59 +14,45 @@ Word Quest is a React + Vite spelling practice app for Grade 3 preparation. It n
    ```bash
    npm install
    ```
-2. Create your environment file:
-   ```bash
-   cp .env.example .env
-   ```
-3. Add your real `GEMINI_API_KEY` to `.env`.
-4. Start the app server:
+2. Start the app:
    ```bash
    npm run dev
    ```
-5. Open `http://localhost:3000`.
+3. Open `http://localhost:5173`.
 
-## Production build
+## Build
 
-Build the frontend bundle:
+Create the production files:
 
 ```bash
 npm run build
 ```
 
-Run the production server:
+Preview the built site locally:
 
 ```bash
 npm start
 ```
 
-The app server serves the built React app from `dist/` and exposes:
+The production build is written to `dist/`.
 
-- `GET /api/health`
-- `POST /api/word-info`
+## Self-hosted deployment
 
-## Self-hosted server deployment
+Because the app is fully static now, the easiest production setup is:
 
-### Option 1: Node + systemd + Nginx
-
-1. Copy the project to your server.
-2. Install Node.js 20 or newer.
-3. Install dependencies:
+1. Build the app:
    ```bash
    npm ci
-   ```
-4. Create `.env` with:
-   ```bash
-   GEMINI_API_KEY=your_real_key
-   PORT=3000
-   ```
-5. Build the app:
-   ```bash
    npm run build
    ```
-6. Start it with `npm start`, `pm2`, or `systemd`.
-7. Put Nginx in front of it using the sample config in [`deploy/nginx-word-quest.conf`](/Users/jd/Sites/hanudhwaj-word-quest/deploy/nginx-word-quest.conf).
+2. Copy the contents of `dist/` to your server web root.
+3. Serve it with Nginx or Apache.
 
-### Option 2: Docker
+### Nginx example
+
+Use the sample config in [deploy/nginx-word-quest.conf](/Users/jd/Sites/hanudhwaj-word-quest/deploy/nginx-word-quest.conf) and point `root` to your deployed `dist/` directory.
+
+### Docker example
 
 Build the image:
 
@@ -79,23 +63,11 @@ docker build -t word-quest .
 Run it:
 
 ```bash
-docker run -d \
-  --name word-quest \
-  -p 3000:3000 \
-  --env GEMINI_API_KEY=your_real_key \
-  --env PORT=3000 \
-  word-quest
+docker run -d --name word-quest -p 8080:80 word-quest
 ```
 
-## Notes from the review
+## Notes
 
-- The original setup injected `GEMINI_API_KEY` into the client build. That is not safe for a live deployment.
-- The project did not include a production app server, so a self-hosted deployment would have needed custom handling for the AI feature.
-- The browser title and docs still reflected the AI Studio starter template.
-
-## Recommended production checklist
-
-- Keep `GEMINI_API_KEY` only in server-side environment variables.
-- Run the app behind HTTPS with Nginx or Caddy.
-- Restart the Node process with `systemd` or `pm2`.
-- Monitor `GET /api/health` from your server or uptime tool.
+- No API key is required.
+- No backend server is required.
+- Since the app uses client-side routing behavior, the web server should fall back to `index.html` for unknown paths.

@@ -39,6 +39,7 @@ export default function App() {
   const [gameState, setGameState] = useState<GameState>("START");
   const [playerName, setPlayerName] = useState("Hanudhwaj");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [practiceWords, setPracticeWords] = useState<WordItem[]>([]);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [userInput, setUserInput] = useState("");
   const [score, setScore] = useState(0);
@@ -47,7 +48,6 @@ export default function App() {
   const [isRevealed, setIsRevealed] = useState(false);
   const [definition, setDefinition] = useState<string | null>(null);
   const [example, setExample] = useState<string | null>(null);
-  const [isLoadingInfo, setIsLoadingInfo] = useState(false);
   const [leaderboard, setLeaderboard] = useState<ScoreEntry[]>([]);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
@@ -56,7 +56,12 @@ export default function App() {
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const currentWords = selectedCategory ? WORD_LISTS[selectedCategory] : [];
+  const currentWords =
+    selectedCategory === "Practice"
+      ? practiceWords
+      : selectedCategory
+        ? WORD_LISTS[selectedCategory] || []
+        : [];
   const activeWord = currentWords[currentWordIndex];
 
   // Load system voices and set default UK voice
@@ -138,10 +143,9 @@ export default function App() {
 
   const startPracticeWrong = () => {
     if (wrongWords.length === 0) return;
-    // Temporarily override WORD_LISTS for this session
     const practiceList = [...wrongWords];
+    setPracticeWords(practiceList);
     setSelectedCategory("Practice");
-    WORD_LISTS["Practice"] = practiceList; // This is a bit hacky but works for local state
     setCurrentWordIndex(0);
     setScore(0);
     setMistakes(0);
@@ -152,36 +156,11 @@ export default function App() {
     setIsRevealed(false);
   };
 
-  const fetchWordInfo = async (word: WordItem) => {
-    setIsLoadingInfo(true);
+  const fetchWordInfo = (word: WordItem) => {
     setDefinition(null);
     setExample(null);
-    try {
-      const response = await fetch("/api/word-info", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          word: word.word,
-          language: word.language,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Word info request failed with status ${response.status}`);
-      }
-
-      const data = await response.json();
-      setDefinition(data.definition || "Definition is unavailable right now.");
-      setExample(data.example || "Example is unavailable right now.");
-    } catch (error) {
-      console.error("Word info lookup failed", error);
-      setDefinition("Definition is unavailable right now.");
-      setExample("Example is unavailable right now.");
-    } finally {
-      setIsLoadingInfo(false);
-    }
+    setDefinition(word.definition);
+    setExample(word.example);
   };
 
   const getFeedback = (score: number, total: number) => {
@@ -524,16 +503,8 @@ export default function App() {
                   </button>
                 ) : (
                   <div className="w-full mt-4 space-y-4">
-                    {isLoadingInfo ? (
-                      <div className="flex justify-center p-4">
-                        <div className="w-6 h-6 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
-                      </div>
-                    ) : (
-                      <>
-                        <div className="p-4 bg-slate-50 rounded-2xl text-sm italic text-slate-700">{definition}</div>
-                        <div className="p-4 bg-amber-50 rounded-2xl text-sm text-amber-800">"{example}"</div>
-                      </>
-                    )}
+                    <div className="p-4 bg-slate-50 rounded-2xl text-sm italic text-slate-700">{definition}</div>
+                    <div className="p-4 bg-amber-50 rounded-2xl text-sm text-amber-800">"{example}"</div>
                   </div>
                 )}
                 
@@ -688,36 +659,25 @@ export default function App() {
                         <h3 className="text-5xl font-black text-slate-900 leading-tight">{activeWord.word}</h3>
                       </div>
 
-                      {isLoadingInfo ? (
-                        <div className="flex-grow flex flex-col items-center justify-center gap-4">
-                          <motion.div 
-                            animate={{ rotate: 360 }}
-                            transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                            className="w-10 h-10 border-4 border-amber-400 border-t-transparent rounded-full" 
-                          />
-                          <p className="text-sm font-bold text-slate-400 italic">Asking Gemini for help...</p>
-                        </div>
-                      ) : (
-                        <div className="space-y-6 flex-grow ">
-                          {definition && (
-                            <div className="bg-amber-50 text-amber-900 p-5 rounded-[32px] text-sm italic border border-amber-100">
-                              {definition}
-                            </div>
-                          )}
-                          {example && (
-                            <div className="text-slate-500 text-sm font-medium leading-relaxed px-4">
-                              <span className="block text-[10px] uppercase text-slate-300 font-black mb-1">Example</span>
-                              "{example}"
-                            </div>
-                          )}
-                          <button 
-                            onClick={handleNextWord}
-                            className="w-full py-5 bg-slate-900 text-white rounded-3xl font-black text-xl flex items-center justify-center gap-2 shadow-[0_6px_0_0_#000] active:translate-y-1 active:shadow-none transition-all"
-                          >
-                            GOT IT! <ChevronRight />
-                          </button>
-                        </div>
-                      )}
+                      <div className="space-y-6 flex-grow ">
+                        {definition && (
+                          <div className="bg-amber-50 text-amber-900 p-5 rounded-[32px] text-sm italic border border-amber-100">
+                            {definition}
+                          </div>
+                        )}
+                        {example && (
+                          <div className="text-slate-500 text-sm font-medium leading-relaxed px-4">
+                            <span className="block text-[10px] uppercase text-slate-300 font-black mb-1">Example</span>
+                            "{example}"
+                          </div>
+                        )}
+                        <button 
+                          onClick={handleNextWord}
+                          className="w-full py-5 bg-slate-900 text-white rounded-3xl font-black text-xl flex items-center justify-center gap-2 shadow-[0_6px_0_0_#000] active:translate-y-1 active:shadow-none transition-all"
+                        >
+                          GOT IT! <ChevronRight />
+                        </button>
+                      </div>
                     </motion.div>
                   )}
 
