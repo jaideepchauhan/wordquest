@@ -87,7 +87,11 @@ export default function App() {
 
   // Auto-play sound when activeWord changes
   useEffect(() => {
-    if ((gameState === "QUIZ" || gameState === "STUDY") && activeWord && !isRevealed) {
+    const shouldAutoPlay =
+      activeWord &&
+      ((gameState === "QUIZ" && !isRevealed) || gameState === "STUDY");
+
+    if (shouldAutoPlay) {
       const timer = setTimeout(() => {
         speak(activeWord.word, activeWord.language);
       }, 500); // Small delay for visual transition
@@ -99,6 +103,35 @@ export default function App() {
   useEffect(() => {
     const saved = localStorage.getItem("wordquest_leaderboard");
     if (saved) setLeaderboard(JSON.parse(saved));
+  }, []);
+
+  const clearWordInfo = useCallback(() => {
+    setDefinition(null);
+    setExample(null);
+  }, []);
+
+  const setWordInfo = useCallback((word: WordItem) => {
+    setDefinition(word.definition);
+    setExample(word.example);
+  }, []);
+
+  const persistScoreToServer = useCallback(async (entry: ScoreEntry) => {
+    try {
+      const response = await fetch("/api/save-score.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(entry),
+        keepalive: true,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Score save failed with status ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Score save failed", error);
+    }
   }, []);
 
   const saveScore = useCallback((score: number, total: number, mistakes: number) => {
@@ -113,7 +146,8 @@ export default function App() {
     const updated = [...leaderboard, newEntry].sort((a, b) => b.score - a.score).slice(0, 10);
     setLeaderboard(updated);
     localStorage.setItem("wordquest_leaderboard", JSON.stringify(updated));
-  }, [playerName, selectedCategory, leaderboard]);
+    void persistScoreToServer(newEntry);
+  }, [leaderboard, persistScoreToServer, playerName, selectedCategory]);
 
   const speak = (text: string, lang: string = "en-IN") => {
     window.speechSynthesis.cancel();
@@ -137,8 +171,7 @@ export default function App() {
     setCurrentWordIndex(0);
     setGameState("STUDY");
     setIsRevealed(false);
-    setDefinition(null);
-    setExample(null);
+    clearWordInfo();
   };
 
   const startPracticeWrong = () => {
@@ -154,13 +187,11 @@ export default function App() {
     setUserInput("");
     setIsCorrect(null);
     setIsRevealed(false);
+    clearWordInfo();
   };
 
   const fetchWordInfo = (word: WordItem) => {
-    setDefinition(null);
-    setExample(null);
-    setDefinition(word.definition);
-    setExample(word.example);
+    setWordInfo(word);
   };
 
   const getFeedback = (score: number, total: number) => {
@@ -223,6 +254,11 @@ export default function App() {
   };
 
   const startQuiz = (category: string) => {
+    if (category === "Hindi") {
+      startStudy(category);
+      return;
+    }
+
     setSelectedCategory(category);
     setCurrentWordIndex(0);
     setScore(0);
@@ -231,6 +267,7 @@ export default function App() {
     setUserInput("");
     setIsCorrect(null);
     setIsRevealed(false);
+    clearWordInfo();
   };
 
   const getMedal = (mistakesCount: number) => {
@@ -240,21 +277,32 @@ export default function App() {
     return null;
   };
 
+  const moveStudyWord = useCallback((nextIndex: number) => {
+    const nextWord = currentWords[nextIndex];
+    setCurrentWordIndex(nextIndex);
+
+    if (!nextWord) return;
+
+    if (isRevealed) {
+      setWordInfo(nextWord);
+    } else {
+      clearWordInfo();
+    }
+  }, [clearWordInfo, currentWords, isRevealed, setWordInfo]);
+
   // Helper to handle swipe in Study mode
   const handleSwipe = (direction: "left" | "right") => {
     if (direction === "right") {
       // Logic for swiping next
       if (currentWordIndex < currentWords.length - 1) {
-        setCurrentWordIndex(prev => prev + 1);
-        setIsRevealed(false);
+        moveStudyWord(currentWordIndex + 1);
       } else {
         setGameState("CATEGORY_SELECT");
       }
     } else {
       // Logic for swiping back
       if (currentWordIndex > 0) {
-        setCurrentWordIndex(prev => prev - 1);
-        setIsRevealed(false);
+        moveStudyWord(currentWordIndex - 1);
       }
     }
   };
@@ -434,25 +482,38 @@ export default function App() {
               <div className="grid grid-cols-1 gap-4">
                 {ALL_CATEGORIES.filter(c => c !== "Practice").map(cat => (
                   <div key={cat} className="space-y-2">
-                    <div className="flex gap-2">
+                    {cat === "Hindi" ? (
                       <button
-                        onClick={() => startQuiz(cat)}
-                        className="flex-grow p-6 bg-white border-2 border-slate-100 hover:border-amber-400 rounded-3xl text-left font-bold text-lg transition-all flex justify-between items-center group shadow-sm active:scale-[0.98]"
+                        onClick={() => startStudy(cat)}
+                        className="w-full p-6 bg-white border-2 border-slate-100 hover:border-amber-400 rounded-3xl text-left font-bold text-lg transition-all flex justify-between items-center group shadow-sm active:scale-[0.98]"
                       >
                         <div className="flex flex-col">
                           <span>{cat}</span>
-                          <span className="text-xs font-normal text-slate-400">Competition</span>
+                          <span className="text-xs font-normal text-slate-400">Study Only</span>
                         </div>
-                        <Trophy className="w-5 h-5 text-slate-200 group-hover:text-amber-400 transition-colors" />
+                        <BookOpen className="w-5 h-5 text-slate-200 group-hover:text-amber-400 transition-colors" />
                       </button>
-                      <button
-                        onClick={() => startStudy(cat)}
-                        className="p-6 bg-slate-100 border-2 border-transparent hover:border-slate-300 rounded-3xl text-slate-600 transition-all active:scale-[0.98]"
-                        title="Study Mode"
-                      >
-                        <BookOpen className="w-6 h-6" />
-                      </button>
-                    </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => startQuiz(cat)}
+                          className="flex-grow p-6 bg-white border-2 border-slate-100 hover:border-amber-400 rounded-3xl text-left font-bold text-lg transition-all flex justify-between items-center group shadow-sm active:scale-[0.98]"
+                        >
+                          <div className="flex flex-col">
+                            <span>{cat}</span>
+                            <span className="text-xs font-normal text-slate-400">Competition</span>
+                          </div>
+                          <Trophy className="w-5 h-5 text-slate-200 group-hover:text-amber-400 transition-colors" />
+                        </button>
+                        <button
+                          onClick={() => startStudy(cat)}
+                          className="p-6 bg-slate-100 border-2 border-transparent hover:border-slate-300 rounded-3xl text-slate-600 transition-all active:scale-[0.98]"
+                          title="Study Mode"
+                        >
+                          <BookOpen className="w-6 h-6" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

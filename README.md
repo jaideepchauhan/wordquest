@@ -2,6 +2,8 @@
 
 Word Quest is a React + Vite spelling practice app for Grade 3 preparation. Definitions and example sentences now live inside the project, so the app does not need Gemini or any backend API to run.
 
+The app does include one lightweight PHP endpoint for score logging in production. Each completed game is appended to a JSON file outside the public web root so score history survives redeploys.
+
 ## Stack
 
 - React 19
@@ -52,6 +54,66 @@ Because the app is fully static now, the easiest production setup is:
 
 Use the sample config in [deploy/nginx-word-quest.conf](/Users/jd/Sites/hanudhwaj-word-quest/deploy/nginx-word-quest.conf) and point `root` to your deployed `dist/` directory.
 
+## Deploy to `hanu.cleverapp.in`
+
+Assumption:
+- Ubuntu or Debian server
+- Nginx installed
+- DNS for `hanu.cleverapp.in` already points to your server IP
+
+### 1. Build locally
+
+```bash
+npm ci
+npm run build
+```
+
+### 2. Copy the built files to the server
+
+```bash
+rsync -avz --delete dist/ user@your-server:/var/www/hanu.cleverapp.in/current/
+```
+
+If the target folder does not exist yet, create it on the server first:
+
+```bash
+sudo mkdir -p /var/www/hanu.cleverapp.in/current
+sudo chown -R $USER:$USER /var/www/hanu.cleverapp.in
+```
+
+### 3. Install the Nginx site config on the server
+
+Copy the provided config:
+
+```bash
+sudo cp deploy/nginx-word-quest.conf /etc/nginx/sites-available/hanu.cleverapp.in
+sudo ln -s /etc/nginx/sites-available/hanu.cleverapp.in /etc/nginx/sites-enabled/hanu.cleverapp.in
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+### 4. Enable HTTPS
+
+```bash
+sudo apt update
+sudo apt install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d hanu.cleverapp.in
+```
+
+After Certbot finishes, your site should be live at:
+
+- `http://hanu.cleverapp.in/`
+- `https://hanu.cleverapp.in/`
+
+### 5. Updating the site later
+
+Each time you make changes:
+
+```bash
+npm run build
+rsync -avz --delete dist/ user@your-server:/var/www/hanu.cleverapp.in/current/
+```
+
 ### Docker example
 
 Build the image:
@@ -69,5 +131,7 @@ docker run -d --name word-quest -p 8080:80 word-quest
 ## Notes
 
 - No API key is required.
-- No backend server is required.
+- No Node backend server is required.
+- If your hosting supports PHP, completed game scores are written by `public/api/save-score.php`.
+- Score logs are stored outside the deployed web root in a sibling `word-quest-data/scores.json` file.
 - Since the app uses client-side routing behavior, the web server should fall back to `index.html` for unknown paths.
