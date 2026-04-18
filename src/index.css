@@ -1,1 +1,87 @@
 @import "tailwindcss";
+
+@layer base {
+  body {
+    background: #fdfcf0;
+    color: #141414;
+  }
+}
+
+@layer components {
+  .quest-bg {
+    background:
+      radial-gradient(circle at top left, rgba(251, 191, 36, 0.24), transparent 22rem),
+      radial-gradient(circle at top right, rgba(251, 146, 60, 0.18), transparent 18rem),
+      radial-gradient(circle at bottom right, rgba(253, 186, 116, 0.18), transparent 20rem),
+      linear-gradient(180deg, #fffdf6 0%, #fdfcf0 100%);
+  }
+
+  .quest-panel {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.92);
+    box-shadow: 0 18px 45px rgba(217, 119, 6, 0.12);
+  }
+
+  .quest-doodle-loop,
+  .quest-doodle-cloud,
+  .quest-doodle-squiggle,
+  .quest-doodle-ring {
+    position: absolute;
+    opacity: 0.8;
+  }
+
+  .quest-doodle-loop {
+    width: 7rem;
+    height: 7rem;
+    border: 3px solid rgba(251, 146, 60, 0.25);
+    border-radius: 41% 59% 53% 47%;
+    transform: rotate(-10deg);
+  }
+
+  .quest-doodle-cloud {
+    width: 7.5rem;
+    height: 3.5rem;
+    background: rgba(255, 255, 255, 0.35);
+    border: 3px solid rgba(251, 191, 36, 0.25);
+    border-radius: 999px;
+  }
+
+  .quest-doodle-cloud::before,
+  .quest-doodle-cloud::after {
+    content: "";
+    position: absolute;
+    background: inherit;
+    border: inherit;
+    border-radius: 999px;
+  }
+
+  .quest-doodle-cloud::before {
+    width: 3.5rem;
+    height: 3.5rem;
+    left: 0.8rem;
+    top: -1.2rem;
+  }
+
+  .quest-doodle-cloud::after {
+    width: 2.8rem;
+    height: 2.8rem;
+    right: 0.9rem;
+    top: -0.8rem;
+  }
+
+  .quest-doodle-squiggle {
+    width: 7rem;
+    height: 1rem;
+    background:
+      radial-gradient(circle at 8px 8px, rgba(251, 146, 60, 0) 7px, rgba(251, 146, 60, 0.45) 8px, rgba(251, 146, 60, 0.45) 10px, rgba(251, 146, 60, 0) 11px) 0 0 / 28px 16px repeat-x;
+    transform: rotate(-6deg);
+  }
+
+  .quest-doodle-ring {
+    width: 5rem;
+    height: 5rem;
+    border: 3px dashed rgba(245, 158, 11, 0.35);
+    border-radius: 9999px;
+  }
+}

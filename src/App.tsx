@@ -37,7 +37,10 @@ interface ScoreEntry {
 
 export default function App() {
   const [gameState, setGameState] = useState<GameState>("START");
-  const [playerName, setPlayerName] = useState("Hanudhwaj");
+  const [playerName, setPlayerName] = useState(() => {
+    if (typeof window === "undefined") return "Hanudhwaj";
+    return localStorage.getItem("wordquest_player_name") || "Hanudhwaj";
+  });
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [practiceWords, setPracticeWords] = useState<WordItem[]>([]);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
@@ -63,6 +66,7 @@ export default function App() {
         ? WORD_LISTS[selectedCategory] || []
         : [];
   const activeWord = currentWords[currentWordIndex];
+  const displayPlayerName = playerName.trim() || "Player";
 
   // Load system voices and set default UK voice
   useEffect(() => {
@@ -105,6 +109,10 @@ export default function App() {
     if (saved) setLeaderboard(JSON.parse(saved));
   }, []);
 
+  useEffect(() => {
+    localStorage.setItem("wordquest_player_name", playerName);
+  }, [playerName]);
+
   const clearWordInfo = useCallback(() => {
     setDefinition(null);
     setExample(null);
@@ -136,7 +144,7 @@ export default function App() {
 
   const saveScore = useCallback((score: number, total: number, mistakes: number) => {
     const newEntry: ScoreEntry = {
-      name: playerName,
+      name: displayPlayerName,
       category: selectedCategory,
       score,
       total,
@@ -147,7 +155,7 @@ export default function App() {
     setLeaderboard(updated);
     localStorage.setItem("wordquest_leaderboard", JSON.stringify(updated));
     void persistScoreToServer(newEntry);
-  }, [leaderboard, persistScoreToServer, playerName, selectedCategory]);
+  }, [displayPlayerName, leaderboard, persistScoreToServer, selectedCategory]);
 
   const speak = (text: string, lang: string = "en-IN") => {
     window.speechSynthesis.cancel();
@@ -308,8 +316,45 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFCF0] text-[#141414] font-sans selection:bg-amber-100 p-4 md:p-8 flex flex-col items-center overflow-x-hidden relative">
-      <header className="w-full max-w-2xl mb-8 flex justify-between items-center bg-white/50 backdrop-blur-md p-4 rounded-3xl border border-white shadow-sm">
+    <div className="quest-bg min-h-screen text-[#141414] font-sans selection:bg-amber-100 p-4 md:p-8 flex flex-col items-center overflow-x-hidden relative isolate">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <motion.div
+          animate={{ y: [0, -12, 0], rotate: [-8, -2, -8] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          className="quest-doodle-loop left-[4%] top-18"
+        />
+        <motion.div
+          animate={{ y: [0, 10, 0], x: [0, 8, 0] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          className="quest-doodle-cloud right-[7%] top-24"
+        />
+        <motion.div
+          animate={{ rotate: [0, 8, -4, 0] }}
+          transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+          className="quest-doodle-squiggle left-[10%] bottom-28"
+        />
+        <motion.div
+          animate={{ scale: [1, 1.08, 1], rotate: [12, 0, 12] }}
+          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+          className="quest-doodle-ring right-[9%] bottom-20"
+        />
+        <motion.div
+          animate={{ y: [0, -8, 0], rotate: [0, 6, 0] }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute left-[12%] top-[34%] text-amber-300/70"
+        >
+          <Star className="h-8 w-8 fill-current" />
+        </motion.div>
+        <motion.div
+          animate={{ y: [0, 8, 0], rotate: [-10, 0, -10] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute right-[16%] top-[48%] text-orange-300/60"
+        >
+          <Trophy className="h-10 w-10" />
+        </motion.div>
+      </div>
+
+      <header className="quest-panel w-full max-w-2xl mb-8 flex justify-between items-center p-4 rounded-3xl">
         <div className="flex items-center gap-3">
           <motion.div 
             whileHover={{ rotate: 15 }}
@@ -319,6 +364,11 @@ export default function App() {
           </motion.div>
           <div>
             <h1 className="text-xl font-bold tracking-tight">Word Quest</h1>
+            {gameState === "START" ? (
+              <p className="text-[10px] font-black uppercase text-orange-500 tracking-[0.25em]">Quest Hub</p>
+            ) : (
+              <p className="text-[10px] font-black uppercase text-amber-600 tracking-wider">Player: {displayPlayerName}</p>
+            )}
             {(gameState === "QUIZ" || gameState === "STUDY") && (
                <p className="text-[10px] font-black uppercase text-amber-600 tracking-wider">Subject: {selectedCategory}</p>
             )}
@@ -412,7 +462,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <main className="w-full max-w-md flex-grow flex flex-col items-center justify-center">
+      <main className="w-full max-w-md flex-grow flex flex-col items-center justify-center relative z-10">
         <AnimatePresence mode="wait">
           {gameState === "START" && (
             <motion.div 
@@ -422,12 +472,35 @@ export default function App() {
               exit={{ opacity: 0, y: -20 }}
               className="text-center space-y-8 w-full"
             >
-              <div className="space-y-2">
-                <h2 className="text-4xl font-black text-amber-500 italic">Hi Hanudhwaj!</h2>
-                <p className="text-slate-500">Ready to win that Gold Medal?</p>
+              <div className="space-y-3">
+                <span className="inline-flex items-center gap-2 rounded-full bg-white/85 px-4 py-2 text-[10px] font-black uppercase tracking-[0.28em] text-orange-500 shadow-sm">
+                  <Star className="h-3.5 w-3.5 fill-current" />
+                  Spelling Arena
+                </span>
+                <h2 className="text-4xl font-black text-amber-500 italic">Hi {displayPlayerName}!</h2>
+                <p className="text-slate-500">Choose your champion name and jump into the next word quest.</p>
               </div>
 
               <div className="grid grid-cols-1 gap-4 w-full">
+                <div className="quest-panel rounded-[34px] p-5 text-left">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-orange-100 text-orange-500 shadow-inner">
+                      <Trophy className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Champion Name</p>
+                      <p className="text-sm text-slate-500">This is saved for the Hall of Fame and score history.</p>
+                    </div>
+                  </div>
+                  <input
+                    type="text"
+                    value={playerName}
+                    onChange={(e) => setPlayerName(e.target.value)}
+                    placeholder="Enter player name"
+                    className="w-full rounded-[26px] border-2 border-orange-100 bg-white px-5 py-4 text-lg font-black text-slate-700 outline-none transition-all focus:border-amber-400 focus:shadow-[0_0_0_5px_rgba(251,191,36,0.15)]"
+                  />
+                </div>
+
                 <button 
                   onClick={() => setGameState("CATEGORY_SELECT")}
                   className="w-full py-5 bg-amber-400 hover:bg-amber-500 text-white rounded-[32px] font-bold text-xl shadow-[0_10px_0_0_#d97706] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2 mb-2"
@@ -445,7 +518,7 @@ export default function App() {
                 )}
 
                 {leaderboard.length > 0 && (
-                  <div className="mt-8 bg-white p-6 rounded-[40px] shadow-sm border border-slate-100">
+                  <div className="quest-panel mt-4 p-6 rounded-[40px]">
                     <h3 className="text-lg font-bold flex items-center justify-center gap-2 mb-4">
                       <Trophy className="w-5 h-5 text-amber-500" /> Hall of Fame
                     </h3>
@@ -478,7 +551,10 @@ export default function App() {
               exit={{ opacity: 0, scale: 0.9 }}
               className="w-full space-y-6"
             >
-              <h2 className="text-2xl font-bold text-center">Choose a Subject</h2>
+              <div className="text-center space-y-2">
+                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-orange-500">Pick Your Arena</p>
+                <h2 className="text-2xl font-bold">Choose a Subject</h2>
+              </div>
               <div className="grid grid-cols-1 gap-4">
                 {ALL_CATEGORIES.filter(c => c !== "Practice").map(cat => (
                   <div key={cat} className="space-y-2">
@@ -540,8 +616,11 @@ export default function App() {
                     if (info.offset.x > 100) handleSwipe("left"); // Swiping right goes back
                     if (info.offset.x < -100) handleSwipe("right"); // Swiping left goes next
                   }}
-                  className="w-full aspect-[4/5] bg-white rounded-[40px] shadow-2xl p-8 flex flex-col items-center justify-center relative transition-all border-b-[12px] border-amber-100 group cursor-grab active:cursor-grabbing"
+                  className="quest-panel w-full aspect-[4/5] rounded-[40px] p-8 flex flex-col items-center justify-center relative transition-all border-b-[12px] border-amber-100 group cursor-grab active:cursor-grabbing"
                 >
+                <div className="absolute left-6 top-6 rounded-full bg-orange-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-orange-600">
+                  Study Deck
+                </div>
                 <div className="flex-grow flex flex-col items-center justify-center text-center">
                   <h3 className="text-6xl font-black mb-4 group-hover:scale-105 transition-transform">{activeWord.word}</h3>
                   <button 
@@ -637,10 +716,17 @@ export default function App() {
                   exit={{ x: -100, opacity: 0, rotate: -5 }}
                   transition={{ type: "spring", stiffness: 200, damping: 20 }}
                   className={cn(
-                    "w-full aspect-[4/5] max-h-[420px] bg-white rounded-[44px] shadow-[0_20px_50px_rgba(0,0,0,0.1)] p-8 flex flex-col items-center justify-center relative overflow-hidden transition-colors border-b-[12px]",
+                    "quest-panel w-full aspect-[4/5] max-h-[420px] rounded-[44px] p-8 flex flex-col items-center justify-center relative overflow-hidden transition-colors border-b-[12px]",
                     isCorrect === true ? "border-green-500" : isCorrect === false ? "border-red-500" : "border-amber-100"
                   )}
                 >
+                  <div className="absolute inset-0 pointer-events-none">
+                    <div className="absolute left-4 top-4 rounded-full bg-amber-100/80 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-amber-700">
+                      Quest Stage {currentWordIndex + 1}
+                    </div>
+                    <div className="absolute -right-8 top-16 h-28 w-28 rounded-full bg-orange-100/60 blur-2xl" />
+                    <div className="absolute -left-8 bottom-10 h-24 w-24 rounded-full bg-amber-100/60 blur-2xl" />
+                  </div>
                   {!isRevealed ? (
                     <>
                       <motion.button 
@@ -668,6 +754,9 @@ export default function App() {
                         placeholder="Type it here..."
                         className="w-full bg-slate-50 border-4 border-slate-100 rounded-3xl p-5 text-center text-3xl font-black focus:outline-none focus:border-amber-400 transition-all uppercase placeholder:text-slate-200 shadow-inner"
                       />
+                      <p className="mt-3 text-[10px] font-black uppercase tracking-[0.24em] text-slate-400">
+                        Hit check when your spelling is ready
+                      </p>
                       
                       <div className="mt-8 flex gap-4 w-full">
                          <button
@@ -686,7 +775,7 @@ export default function App() {
                          <button
                            disabled={!userInput.trim()}
                            onClick={handleCheckSpelling}
-                           className="flex-[2] py-4 bg-slate-900 text-white rounded-2xl font-black text-lg hover:bg-slate-800 disabled:opacity-50 transition-all shadow-[0_4px_0_0_#000] flex items-center justify-center gap-2"
+                           className="flex-[2] py-4 bg-gradient-to-b from-emerald-400 to-emerald-500 text-white rounded-2xl font-black text-lg hover:from-emerald-500 hover:to-emerald-600 disabled:opacity-50 transition-all shadow-[0_5px_0_0_#0f766e] flex items-center justify-center gap-2"
                          >
                            CHECK!
                          </button>
@@ -773,7 +862,7 @@ export default function App() {
                     {score / currentWords.length >= 0.8 && (
                        <PartyPopper className="w-20 h-20 text-amber-500 absolute -top-10 -left-10 animate-bounce" />
                     )}
-                    <div className={cn("bg-white px-8 py-5 rounded-[40px] shadow-xl border-4", feedback.border)}>
+                    <div className={cn("quest-panel px-8 py-5 rounded-[40px] border-4", feedback.border)}>
                       <h2 className={cn("text-3xl font-black italic mb-1", feedback.color)}>{feedback.text}</h2>
                       <p className="text-xs text-slate-500 font-bold">{feedback.sub}</p>
                     </div>
@@ -845,7 +934,7 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      <footer className="mt-12 text-[10px] text-slate-300 font-mono tracking-widest uppercase flex items-center gap-4">
+      <footer className="mt-12 text-[10px] text-slate-400 font-mono tracking-widest uppercase flex items-center gap-4 relative z-10">
         <span>Hanudhwaj's Word Quest</span>
         <span>•</span>
         <span>Grade 3 Competition Prep</span>
