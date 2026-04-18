@@ -1,6 +1,6 @@
 # Hanudhwaj's Word Quest
 
-Word Quest is a React + Vite spelling practice app for Grade 3 preparation. Definitions and example sentences now live inside the project, so the app does not need Gemini or any backend API to run.
+Word Quest is a React + Vite spelling practice app for Grade 3 preparation. Definitions and example sentences live inside the project, and voice playback can be pre-generated into static audio files, so the live site does not need Gemini, ElevenLabs, or any backend API to run.
 
 The app does include one lightweight PHP endpoint for score logging in production. Each completed game is appended to a JSON file outside the public web root so score history survives redeploys.
 
@@ -21,6 +21,16 @@ The app does include one lightweight PHP endpoint for score logging in productio
    npm run dev
    ```
 3. Open `http://localhost:5173`.
+
+### Optional one-time voice generation
+
+If you want consistent spoken prompts on every device, create a local `.env.local` from `.env.example` and run:
+
+```bash
+npm run generate:audio
+```
+
+This generates static MP3 files into `public/audio/` for all current words plus the reusable UI phrases. These files can be committed and deployed like any other asset, and the live site will not call ElevenLabs afterward.
 
 ## Build
 
@@ -130,8 +140,9 @@ docker run -d --name word-quest -p 8080:80 word-quest
 
 ## Notes
 
-- No API key is required.
+- No API key is required for the live site.
 - No Node backend server is required.
 - If your hosting supports PHP, completed game scores are written by `public/api/save-score.php`.
 - Score logs are stored outside the deployed web root in a sibling `word-quest-data/scores.json` file.
+- ElevenLabs access is only needed locally if you choose to generate the optional static voice pack.
 - Since the app uses client-side routing behavior, the web server should fall back to `index.html` for unknown paths.

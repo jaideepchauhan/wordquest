@@ -1,0 +1,607 @@
+{
+  "generatedAt": "2026-04-18T13:19:30.883Z",
+  "voiceId": "7wlfJf72PCt9FjPj0Beg",
+  "modelId": "eleven_multilingual_v2",
+  "outputFormat": "mp3_44100_128",
+  "words": [
+    {
+      "audioKey": "english-001",
+      "word": "flying",
+      "category": "English",
+      "path": "audio/words/english-001.mp3"
+    },
+    {
+      "audioKey": "english-002",
+      "word": "talking",
+      "category": "English",
+      "path": "audio/words/english-002.mp3"
+    },
+    {
+      "audioKey": "english-003",
+      "word": "bright",
+      "category": "English",
+      "path": "audio/words/english-003.mp3"
+    },
+    {
+      "audioKey": "english-004",
+      "word": "different",
+      "category": "English",
+      "path": "audio/words/english-004.mp3"
+    },
+    {
+      "audioKey": "english-005",
+      "word": "goose",
+      "category": "English",
+      "path": "audio/words/english-005.mp3"
+    },
+    {
+      "audioKey": "english-006",
+      "word": "thinks",
+      "category": "English",
+      "path": "audio/words/english-006.mp3"
+    },
+    {
+      "audioKey": "english-007",
+      "word": "sitting",
+      "category": "English",
+      "path": "audio/words/english-007.mp3"
+    },
+    {
+      "audioKey": "english-008",
+      "word": "whales",
+      "category": "English",
+      "path": "audio/words/english-008.mp3"
+    },
+    {
+      "audioKey": "english-009",
+      "word": "nights",
+      "category": "English",
+      "path": "audio/words/english-009.mp3"
+    },
+    {
+      "audioKey": "english-010",
+      "word": "mountains",
+      "category": "English",
+      "path": "audio/words/english-010.mp3"
+    },
+    {
+      "audioKey": "english-011",
+      "word": "valleys",
+      "category": "English",
+      "path": "audio/words/english-011.mp3"
+    },
+    {
+      "audioKey": "english-012",
+      "word": "climbing",
+      "category": "English",
+      "path": "audio/words/english-012.mp3"
+    },
+    {
+      "audioKey": "english-013",
+      "word": "bamboo",
+      "category": "English",
+      "path": "audio/words/english-013.mp3"
+    },
+    {
+      "audioKey": "english-014",
+      "word": "colourful",
+      "category": "English",
+      "path": "audio/words/english-014.mp3"
+    },
+    {
+      "audioKey": "english-015",
+      "word": "amazing",
+      "category": "English",
+      "path": "audio/words/english-015.mp3"
+    },
+    {
+      "audioKey": "english-016",
+      "word": "dragon",
+      "category": "English",
+      "path": "audio/words/english-016.mp3"
+    },
+    {
+      "audioKey": "english-017",
+      "word": "beautiful",
+      "category": "English",
+      "path": "audio/words/english-017.mp3"
+    },
+    {
+      "audioKey": "english-018",
+      "word": "admire",
+      "category": "English",
+      "path": "audio/words/english-018.mp3"
+    },
+    {
+      "audioKey": "english-019",
+      "word": "lovely",
+      "category": "English",
+      "path": "audio/words/english-019.mp3"
+    },
+    {
+      "audioKey": "english-020",
+      "word": "square",
+      "category": "English",
+      "path": "audio/words/english-020.mp3"
+    },
+    {
+      "audioKey": "english-021",
+      "word": "simple",
+      "category": "English",
+      "path": "audio/words/english-021.mp3"
+    },
+    {
+      "audioKey": "english-022",
+      "word": "elegant",
+      "category": "English",
+      "path": "audio/words/english-022.mp3"
+    },
+    {
+      "audioKey": "english-023",
+      "word": "strong",
+      "category": "English",
+      "path": "audio/words/english-023.mp3"
+    },
+    {
+      "audioKey": "english-024",
+      "word": "proud",
+      "category": "English",
+      "path": "audio/words/english-024.mp3"
+    },
+    {
+      "audioKey": "english-025",
+      "word": "agree",
+      "category": "English",
+      "path": "audio/words/english-025.mp3"
+    },
+    {
+      "audioKey": "english-026",
+      "word": "thick",
+      "category": "English",
+      "path": "audio/words/english-026.mp3"
+    },
+    {
+      "audioKey": "english-027",
+      "word": "forests",
+      "category": "English",
+      "path": "audio/words/english-027.mp3"
+    },
+    {
+      "audioKey": "english-028",
+      "word": "pine",
+      "category": "English",
+      "path": "audio/words/english-028.mp3"
+    },
+    {
+      "audioKey": "english-029",
+      "word": "toward",
+      "category": "English",
+      "path": "audio/words/english-029.mp3"
+    },
+    {
+      "audioKey": "evs-001",
+      "word": "nutrient",
+      "category": "EVS",
+      "path": "audio/words/evs-001.mp3"
+    },
+    {
+      "audioKey": "evs-002",
+      "word": "upward",
+      "category": "EVS",
+      "path": "audio/words/evs-002.mp3"
+    },
+    {
+      "audioKey": "evs-003",
+      "word": "sunlight",
+      "category": "EVS",
+      "path": "audio/words/evs-003.mp3"
+    },
+    {
+      "audioKey": "evs-004",
+      "word": "absence",
+      "category": "EVS",
+      "path": "audio/words/evs-004.mp3"
+    },
+    {
+      "audioKey": "evs-005",
+      "word": "climb",
+      "category": "EVS",
+      "path": "audio/words/evs-005.mp3"
+    },
+    {
+      "audioKey": "evs-006",
+      "word": "shoot",
+      "category": "EVS",
+      "path": "audio/words/evs-006.mp3"
+    },
+    {
+      "audioKey": "evs-007",
+      "word": "root",
+      "category": "EVS",
+      "path": "audio/words/evs-007.mp3"
+    },
+    {
+      "audioKey": "evs-008",
+      "word": "flexible",
+      "category": "EVS",
+      "path": "audio/words/evs-008.mp3"
+    },
+    {
+      "audioKey": "evs-009",
+      "word": "fibrous",
+      "category": "EVS",
+      "path": "audio/words/evs-009.mp3"
+    },
+    {
+      "audioKey": "evs-010",
+      "word": "duckweed",
+      "category": "EVS",
+      "path": "audio/words/evs-010.mp3"
+    },
+    {
+      "audioKey": "evs-011",
+      "word": "simple",
+      "category": "EVS",
+      "path": "audio/words/evs-011.mp3"
+    },
+    {
+      "audioKey": "evs-012",
+      "word": "soil",
+      "category": "EVS",
+      "path": "audio/words/evs-012.mp3"
+    },
+    {
+      "audioKey": "evs-013",
+      "word": "carrot",
+      "category": "EVS",
+      "path": "audio/words/evs-013.mp3"
+    },
+    {
+      "audioKey": "evs-014",
+      "word": "fix",
+      "category": "EVS",
+      "path": "audio/words/evs-014.mp3"
+    },
+    {
+      "audioKey": "evs-015",
+      "word": "stem",
+      "category": "EVS",
+      "path": "audio/words/evs-015.mp3"
+    },
+    {
+      "audioKey": "evs-016",
+      "word": "stick",
+      "category": "EVS",
+      "path": "audio/words/evs-016.mp3"
+    },
+    {
+      "audioKey": "evs-017",
+      "word": "fruit",
+      "category": "EVS",
+      "path": "audio/words/evs-017.mp3"
+    },
+    {
+      "audioKey": "evs-018",
+      "word": "leaves",
+      "category": "EVS",
+      "path": "audio/words/evs-018.mp3"
+    },
+    {
+      "audioKey": "evs-019",
+      "word": "flowers",
+      "category": "EVS",
+      "path": "audio/words/evs-019.mp3"
+    },
+    {
+      "audioKey": "evs-020",
+      "word": "seeds",
+      "category": "EVS",
+      "path": "audio/words/evs-020.mp3"
+    },
+    {
+      "audioKey": "evs-021",
+      "word": "perfume",
+      "category": "EVS",
+      "path": "audio/words/evs-021.mp3"
+    },
+    {
+      "audioKey": "evs-022",
+      "word": "medicine",
+      "category": "EVS",
+      "path": "audio/words/evs-022.mp3"
+    },
+    {
+      "audioKey": "evs-023",
+      "word": "edible",
+      "category": "EVS",
+      "path": "audio/words/evs-023.mp3"
+    },
+    {
+      "audioKey": "evs-024",
+      "word": "smooth",
+      "category": "EVS",
+      "path": "audio/words/evs-024.mp3"
+    },
+    {
+      "audioKey": "evs-025",
+      "word": "rough",
+      "category": "EVS",
+      "path": "audio/words/evs-025.mp3"
+    },
+    {
+      "audioKey": "evs-026",
+      "word": "spices",
+      "category": "EVS",
+      "path": "audio/words/evs-026.mp3"
+    },
+    {
+      "audioKey": "evs-027",
+      "word": "pulses",
+      "category": "EVS",
+      "path": "audio/words/evs-027.mp3"
+    },
+    {
+      "audioKey": "evs-028",
+      "word": "rice",
+      "category": "EVS",
+      "path": "audio/words/evs-028.mp3"
+    },
+    {
+      "audioKey": "evs-029",
+      "word": "corn",
+      "category": "EVS",
+      "path": "audio/words/evs-029.mp3"
+    },
+    {
+      "audioKey": "evs-030",
+      "word": "cooking",
+      "category": "EVS",
+      "path": "audio/words/evs-030.mp3"
+    },
+    {
+      "audioKey": "computer-001",
+      "word": "Devices",
+      "category": "Computer",
+      "path": "audio/words/computer-001.mp3"
+    },
+    {
+      "audioKey": "computer-002",
+      "word": "Hardware",
+      "category": "Computer",
+      "path": "audio/words/computer-002.mp3"
+    },
+    {
+      "audioKey": "computer-003",
+      "word": "Application",
+      "category": "Computer",
+      "path": "audio/words/computer-003.mp3"
+    },
+    {
+      "audioKey": "computer-004",
+      "word": "Software",
+      "category": "Computer",
+      "path": "audio/words/computer-004.mp3"
+    },
+    {
+      "audioKey": "computer-005",
+      "word": "Operating",
+      "category": "Computer",
+      "path": "audio/words/computer-005.mp3"
+    },
+    {
+      "audioKey": "computer-006",
+      "word": "System",
+      "category": "Computer",
+      "path": "audio/words/computer-006.mp3"
+    },
+    {
+      "audioKey": "computer-007",
+      "word": "Printer",
+      "category": "Computer",
+      "path": "audio/words/computer-007.mp3"
+    },
+    {
+      "audioKey": "computer-008",
+      "word": "Headphones",
+      "category": "Computer",
+      "path": "audio/words/computer-008.mp3"
+    },
+    {
+      "audioKey": "computer-009",
+      "word": "Windows",
+      "category": "Computer",
+      "path": "audio/words/computer-009.mp3"
+    },
+    {
+      "audioKey": "computer-010",
+      "word": "Minimise",
+      "category": "Computer",
+      "path": "audio/words/computer-010.mp3"
+    },
+    {
+      "audioKey": "computer-011",
+      "word": "Taskview",
+      "category": "Computer",
+      "path": "audio/words/computer-011.mp3"
+    },
+    {
+      "audioKey": "computer-012",
+      "word": "Desktop",
+      "category": "Computer",
+      "path": "audio/words/computer-012.mp3"
+    },
+    {
+      "audioKey": "computer-013",
+      "word": "Touch",
+      "category": "Computer",
+      "path": "audio/words/computer-013.mp3"
+    },
+    {
+      "audioKey": "computer-014",
+      "word": "Screen",
+      "category": "Computer",
+      "path": "audio/words/computer-014.mp3"
+    },
+    {
+      "audioKey": "computer-015",
+      "word": "Monitor",
+      "category": "Computer",
+      "path": "audio/words/computer-015.mp3"
+    },
+    {
+      "audioKey": "computer-016",
+      "word": "Projector",
+      "category": "Computer",
+      "path": "audio/words/computer-016.mp3"
+    },
+    {
+      "audioKey": "computer-017",
+      "word": "Pen Drive",
+      "category": "Computer",
+      "path": "audio/words/computer-017.mp3"
+    },
+    {
+      "audioKey": "computer-018",
+      "word": "Joystick",
+      "category": "Computer",
+      "path": "audio/words/computer-018.mp3"
+    },
+    {
+      "audioKey": "computer-019",
+      "word": "Folder",
+      "category": "Computer",
+      "path": "audio/words/computer-019.mp3"
+    },
+    {
+      "audioKey": "computer-020",
+      "word": "Recycle Bin",
+      "category": "Computer",
+      "path": "audio/words/computer-020.mp3"
+    },
+    {
+      "audioKey": "computer-021",
+      "word": "Ribbon",
+      "category": "Computer",
+      "path": "audio/words/computer-021.mp3"
+    },
+    {
+      "audioKey": "computer-022",
+      "word": "Zoom",
+      "category": "Computer",
+      "path": "audio/words/computer-022.mp3"
+    },
+    {
+      "audioKey": "computer-023",
+      "word": "Slider",
+      "category": "Computer",
+      "path": "audio/words/computer-023.mp3"
+    },
+    {
+      "audioKey": "spices-001",
+      "word": "Betel",
+      "category": "Spices",
+      "path": "audio/words/spices-001.mp3"
+    },
+    {
+      "audioKey": "spices-002",
+      "word": "Cherry",
+      "category": "Spices",
+      "path": "audio/words/spices-002.mp3"
+    },
+    {
+      "audioKey": "spices-003",
+      "word": "Aniseed",
+      "category": "Spices",
+      "path": "audio/words/spices-003.mp3"
+    },
+    {
+      "audioKey": "spices-004",
+      "word": "Gulkand",
+      "category": "Spices",
+      "path": "audio/words/spices-004.mp3"
+    },
+    {
+      "audioKey": "spices-005",
+      "word": "Lime",
+      "category": "Spices",
+      "path": "audio/words/spices-005.mp3"
+    },
+    {
+      "audioKey": "spices-006",
+      "word": "Ground coconut",
+      "category": "Spices",
+      "path": "audio/words/spices-006.mp3"
+    },
+    {
+      "audioKey": "spices-007",
+      "word": "Betel nut",
+      "category": "Spices",
+      "path": "audio/words/spices-007.mp3"
+    },
+    {
+      "audioKey": "spices-008",
+      "word": "Catechu",
+      "category": "Spices",
+      "path": "audio/words/spices-008.mp3"
+    },
+    {
+      "audioKey": "spices-009",
+      "word": "Cardamom",
+      "category": "Spices",
+      "path": "audio/words/spices-009.mp3"
+    },
+    {
+      "audioKey": "spices-010",
+      "word": "Pepper mint",
+      "category": "Spices",
+      "path": "audio/words/spices-010.mp3"
+    },
+    {
+      "audioKey": "spices-011",
+      "word": "Groundnut",
+      "category": "Spices",
+      "path": "audio/words/spices-011.mp3"
+    },
+    {
+      "audioKey": "spices-012",
+      "word": "Peanut",
+      "category": "Spices",
+      "path": "audio/words/spices-012.mp3"
+    },
+    {
+      "audioKey": "spices-013",
+      "word": "Chestnut",
+      "category": "Spices",
+      "path": "audio/words/spices-013.mp3"
+    },
+    {
+      "audioKey": "spices-014",
+      "word": "Sago",
+      "category": "Spices",
+      "path": "audio/words/spices-014.mp3"
+    },
+    {
+      "audioKey": "spices-015",
+      "word": "Sesame",
+      "category": "Spices",
+      "path": "audio/words/spices-015.mp3"
+    }
+  ],
+  "ui": [
+    {
+      "id": "great-job",
+      "text": "Great job!",
+      "path": "audio/ui/great-job.mp3"
+    },
+    {
+      "id": "incorrect",
+      "text": "Incorrect!",
+      "path": "audio/ui/incorrect.mp3"
+    },
+    {
+      "id": "lets-get-that-gold",
+      "text": "Hello Hanudhwaj! Let's get that Gold!",
+      "path": "audio/ui/lets-get-that-gold.mp3"
+    }
+  ]
+}

@@ -22,6 +22,7 @@ import {
   Lightbulb
 } from "lucide-react";
 import { WORD_LISTS, WordItem, ALL_CATEGORIES } from "./data/words";
+import { UI_AUDIO_PHRASES, type UiAudioPhraseId } from "./data/audioPhrases";
 import { cn } from "./lib/utils";
 
 type GameState = "START" | "CATEGORY_SELECT" | "MODE_SELECT" | "STUDY" | "QUIZ" | "RESULTS";
@@ -45,6 +46,7 @@ export default function App() {
   const [practiceWords, setPracticeWords] = useState<WordItem[]>([]);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [userInput, setUserInput] = useState("");
+  const [submittedAttempt, setSubmittedAttempt] = useState("");
   const [score, setScore] = useState(0);
   const [mistakes, setMistakes] = useState(0);
   const [wrongWords, setWrongWords] = useState<WordItem[]>([]);
@@ -53,11 +55,11 @@ export default function App() {
   const [example, setExample] = useState<string | null>(null);
   const [leaderboard, setLeaderboard] = useState<ScoreEntry[]>([]);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [selectedVoiceURI, setSelectedVoiceURI] = useState<string>("");
   const [showSettings, setShowSettings] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const playbackTokenRef = useRef(0);
 
   const currentWords =
     selectedCategory === "Practice"
@@ -67,41 +69,6 @@ export default function App() {
         : [];
   const activeWord = currentWords[currentWordIndex];
   const displayPlayerName = playerName.trim() || "Player";
-
-  // Load system voices and set default UK voice
-  useEffect(() => {
-    const loadVoices = () => {
-      const availableVoices = window.speechSynthesis.getVoices();
-      setVoices(availableVoices);
-      
-      // Preferred: Google UK English, then any UK English, then fallback to first available
-      const ukVoice = availableVoices.find(v => v.name.includes("UK") && v.lang.startsWith("en-GB")) || 
-                      availableVoices.find(v => v.lang === "en-GB") ||
-                      availableVoices.find(v => v.lang.startsWith("en-GB")) ||
-                      availableVoices.find(v => v.lang.startsWith("en"));
-      
-      if (ukVoice && !selectedVoiceURI) {
-        setSelectedVoiceURI(ukVoice.voiceURI);
-      }
-    };
-
-    loadVoices();
-    window.speechSynthesis.onvoiceschanged = loadVoices;
-  }, [selectedVoiceURI]);
-
-  // Auto-play sound when activeWord changes
-  useEffect(() => {
-    const shouldAutoPlay =
-      activeWord &&
-      ((gameState === "QUIZ" && !isRevealed) || gameState === "STUDY");
-
-    if (shouldAutoPlay) {
-      const timer = setTimeout(() => {
-        speak(activeWord.word, activeWord.language);
-      }, 500); // Small delay for visual transition
-      return () => clearTimeout(timer);
-    }
-  }, [activeWord, gameState, isRevealed]);
 
   // Load leaderboard
   useEffect(() => {
@@ -157,27 +124,101 @@ export default function App() {
     void persistScoreToServer(newEntry);
   }, [displayPlayerName, leaderboard, persistScoreToServer, selectedCategory]);
 
-  const speak = (text: string, lang: string = "en-IN") => {
+  const browserSpeak = useCallback((text: string) => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    
-    // Attempt to use selected voice
-    const selectedVoice = voices.find(v => v.voiceURI === selectedVoiceURI);
-    if (selectedVoice) {
-      utterance.voice = selectedVoice;
-    } else {
-      // Fallback: prefer en-GB (UK)
-      utterance.lang = "en-GB";
-    }
-    
+    utterance.lang = "en-GB";
     utterance.rate = 0.85;
     window.speechSynthesis.speak(utterance);
-  };
+  }, []);
+
+  const stopAudio = useCallback(() => {
+    playbackTokenRef.current += 1;
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current = null;
+    }
+  }, []);
+
+  const playAudioSequence = useCallback(async (segments: Array<{ src: string; fallbackText: string }>) => {
+    if (segments.length === 0) return;
+
+    stopAudio();
+    const token = playbackTokenRef.current;
+
+    for (const segment of segments) {
+      if (playbackTokenRef.current !== token) return;
+
+      const audio = new Audio(segment.src);
+      audio.preload = "auto";
+      audioRef.current = audio;
+
+      try {
+        await audio.play();
+      } catch (error) {
+        console.error(`Audio playback failed for ${segment.src}`, error);
+        audioRef.current = null;
+        browserSpeak(segments.map((item) => item.fallbackText).join(" "));
+        return;
+      }
+
+      await new Promise<void>((resolve) => {
+        const finish = () => {
+          audio.removeEventListener("ended", finish);
+          audio.removeEventListener("error", finish);
+          resolve();
+        };
+
+        audio.addEventListener("ended", finish, { once: true });
+        audio.addEventListener("error", finish, { once: true });
+      });
+    }
+
+    if (playbackTokenRef.current === token) {
+      audioRef.current = null;
+    }
+  }, [browserSpeak, stopAudio]);
+
+  const playPhrase = useCallback((phraseId: UiAudioPhraseId) => {
+    const phrase = UI_AUDIO_PHRASES.find((entry) => entry.id === phraseId);
+    if (!phrase) return;
+
+    void playAudioSequence([{ src: `/audio/ui/${phraseId}.mp3`, fallbackText: phrase.text }]);
+  }, [playAudioSequence]);
+
+  const playWord = useCallback((word: WordItem) => {
+    void playAudioSequence([{ src: `/audio/words/${word.audioKey}.mp3`, fallbackText: word.word }]);
+  }, [playAudioSequence]);
+
+  // Auto-play sound when activeWord changes
+  useEffect(() => {
+    const shouldAutoPlay =
+      activeWord &&
+      ((gameState === "QUIZ" && !isRevealed) || gameState === "STUDY");
+
+    if (shouldAutoPlay) {
+      const timer = setTimeout(() => {
+        playWord(activeWord);
+      }, 500); // Small delay for visual transition
+      return () => clearTimeout(timer);
+    }
+  }, [activeWord, gameState, isRevealed, playWord]);
+
+  useEffect(() => () => {
+    stopAudio();
+  }, [stopAudio]);
 
   const startStudy = (category: string) => {
     setSelectedCategory(category);
     setCurrentWordIndex(0);
     setGameState("STUDY");
+    setSubmittedAttempt("");
     setIsRevealed(false);
     clearWordInfo();
   };
@@ -193,6 +234,7 @@ export default function App() {
     setWrongWords([]);
     setGameState("QUIZ");
     setUserInput("");
+    setSubmittedAttempt("");
     setIsCorrect(null);
     setIsRevealed(false);
     clearWordInfo();
@@ -222,6 +264,7 @@ export default function App() {
     if (currentWordIndex < currentWords.length - 1) {
       setCurrentWordIndex(prev => prev + 1);
       setUserInput("");
+      setSubmittedAttempt("");
       setIsCorrect(null);
       setIsRevealed(false);
       setDefinition(null);
@@ -239,13 +282,15 @@ export default function App() {
   const handleCheckSpelling = () => {
     if (!userInput.trim()) return;
 
-    const normalizedInput = userInput.trim().toLowerCase();
+    const trimmedInput = userInput.trim();
+    const normalizedInput = trimmedInput.toLowerCase();
     const normalizedTarget = activeWord.word.toLowerCase();
+    setSubmittedAttempt(trimmedInput);
 
     if (normalizedInput === normalizedTarget) {
       setScore(prev => prev + 1);
       setIsCorrect(true);
-      speak(activeWord.language === "hi-IN" ? "सही जवाब" : "Great job!", activeWord.language);
+      playPhrase("great-job");
       setTimeout(() => handleNextWord(), 1500);
     } else {
       setMistakes(prev => prev + 1);
@@ -256,23 +301,22 @@ export default function App() {
       });
       setIsCorrect(false);
       setIsRevealed(true);
-      speak(activeWord.language === "hi-IN" ? "गलत! सही वर्तनी है " + activeWord.word : "Incorrect! The correct spelling is " + activeWord.word, activeWord.language);
+      void playAudioSequence([
+        { src: "/audio/ui/incorrect.mp3", fallbackText: "Incorrect!" },
+        { src: `/audio/words/${activeWord.audioKey}.mp3`, fallbackText: activeWord.word },
+      ]);
       fetchWordInfo(activeWord);
     }
   };
 
   const startQuiz = (category: string) => {
-    if (category === "Hindi") {
-      startStudy(category);
-      return;
-    }
-
     setSelectedCategory(category);
     setCurrentWordIndex(0);
     setScore(0);
     setMistakes(0);
     setGameState("QUIZ");
     setUserInput("");
+    setSubmittedAttempt("");
     setIsCorrect(null);
     setIsRevealed(false);
     clearWordInfo();
@@ -314,6 +358,60 @@ export default function App() {
       }
     }
   };
+
+  const goToPreviousQuizWord = useCallback(() => {
+    if (currentWordIndex === 0) return;
+
+    stopAudio();
+    setCurrentWordIndex(prev => prev - 1);
+    setUserInput("");
+    setSubmittedAttempt("");
+    setIsCorrect(null);
+    setIsRevealed(false);
+    clearWordInfo();
+  }, [clearWordInfo, currentWordIndex, stopAudio]);
+
+  const dismissCorrectionCard = useCallback(() => {
+    if (!(gameState === "QUIZ" && isRevealed)) return;
+
+    stopAudio();
+    handleNextWord();
+  }, [gameState, handleNextWord, isRevealed, stopAudio]);
+
+  useEffect(() => {
+    const handleKeyboardNavigation = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const isTypingField =
+        target?.tagName === "INPUT" ||
+        target?.tagName === "TEXTAREA" ||
+        target?.isContentEditable;
+
+      if (gameState === "STUDY") {
+        if (event.key === "ArrowLeft") {
+          event.preventDefault();
+          handleSwipe("left");
+        } else if (event.key === "ArrowRight") {
+          event.preventDefault();
+          handleSwipe("right");
+        }
+        return;
+      }
+
+      if (gameState === "QUIZ" && isRevealed && event.key === "Escape") {
+        event.preventDefault();
+        dismissCorrectionCard();
+        return;
+      }
+
+      if (gameState === "QUIZ" && !isRevealed && !isTypingField && event.key === "ArrowLeft") {
+        event.preventDefault();
+        goToPreviousQuizWord();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyboardNavigation);
+    return () => window.removeEventListener("keydown", handleKeyboardNavigation);
+  }, [dismissCorrectionCard, gameState, goToPreviousQuizWord, handleSwipe, isRevealed]);
 
   return (
     <div className="quest-bg min-h-screen text-[#141414] font-sans selection:bg-amber-100 p-4 md:p-8 flex flex-col items-center overflow-x-hidden relative isolate">
@@ -394,6 +492,7 @@ export default function App() {
             <button 
               onClick={() => {
                 setGameState("START");
+                setSubmittedAttempt("");
                 setIsRevealed(false);
                 setDefinition(null);
                 setExample(null);
@@ -431,27 +530,15 @@ export default function App() {
               </div>
 
               <div className="space-y-4">
-                <label className="block">
-                  <span className="text-sm font-bold text-slate-500 uppercase tracking-widest pl-2">System Voice</span>
-                  <select 
-                    value={selectedVoiceURI}
-                    onChange={(e) => setSelectedVoiceURI(e.target.value)}
-                    className="mt-1 block w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold focus:outline-none focus:border-amber-400 transition-all appearance-none"
-                  >
-                    {voices.map(v => (
-                      <option key={v.voiceURI} value={v.voiceURI}>
-                        {v.name} ({v.lang})
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                
-                <p className="text-xs text-slate-400 italic px-2">
-                  Choose a voice that Hanudhwaj finds easy to follow. Google UK English is recommended.
-                </p>
+                <div className="rounded-[28px] border-2 border-amber-100 bg-amber-50/70 p-5">
+                  <p className="text-sm font-black uppercase tracking-[0.2em] text-amber-600">Voice Pack Ready</p>
+                  <p className="mt-2 text-sm text-slate-500">
+                    This build prefers pre-generated voice clips stored with the app. If the pack has not been generated yet, it falls back to the browser voice so gameplay still works.
+                  </p>
+                </div>
                 
                 <button 
-                  onClick={() => speak("Hello Hanudhwaj! Let's get that Gold!")}
+                  onClick={() => playPhrase("lets-get-that-gold")}
                   className="w-full py-3 bg-amber-50 text-amber-600 font-bold rounded-2xl border-2 border-amber-100 hover:bg-amber-100 transition-colors"
                 >
                   Test Voice
@@ -557,39 +644,24 @@ export default function App() {
               </div>
               <div className="grid grid-cols-1 gap-4">
                 {ALL_CATEGORIES.filter(c => c !== "Practice").map(cat => (
-                  <div key={cat} className="space-y-2">
-                    {cat === "Hindi" ? (
-                      <button
-                        onClick={() => startStudy(cat)}
-                        className="w-full p-6 bg-white border-2 border-slate-100 hover:border-amber-400 rounded-3xl text-left font-bold text-lg transition-all flex justify-between items-center group shadow-sm active:scale-[0.98]"
-                      >
-                        <div className="flex flex-col">
-                          <span>{cat}</span>
-                          <span className="text-xs font-normal text-slate-400">Study Only</span>
-                        </div>
-                        <BookOpen className="w-5 h-5 text-slate-200 group-hover:text-amber-400 transition-colors" />
-                      </button>
-                    ) : (
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => startQuiz(cat)}
-                          className="flex-grow p-6 bg-white border-2 border-slate-100 hover:border-amber-400 rounded-3xl text-left font-bold text-lg transition-all flex justify-between items-center group shadow-sm active:scale-[0.98]"
-                        >
-                          <div className="flex flex-col">
-                            <span>{cat}</span>
-                            <span className="text-xs font-normal text-slate-400">Competition</span>
-                          </div>
-                          <Trophy className="w-5 h-5 text-slate-200 group-hover:text-amber-400 transition-colors" />
-                        </button>
-                        <button
-                          onClick={() => startStudy(cat)}
-                          className="p-6 bg-slate-100 border-2 border-transparent hover:border-slate-300 rounded-3xl text-slate-600 transition-all active:scale-[0.98]"
-                          title="Study Mode"
-                        >
-                          <BookOpen className="w-6 h-6" />
-                        </button>
+                  <div key={cat} className="flex gap-2">
+                    <button
+                      onClick={() => startQuiz(cat)}
+                      className="flex-grow p-6 bg-white border-2 border-slate-100 hover:border-amber-400 rounded-3xl text-left font-bold text-lg transition-all flex justify-between items-center group shadow-sm active:scale-[0.98]"
+                    >
+                      <div className="flex flex-col">
+                        <span>{cat}</span>
+                        <span className="text-xs font-normal text-slate-400">Competition</span>
                       </div>
-                    )}
+                      <Trophy className="w-5 h-5 text-slate-200 group-hover:text-amber-400 transition-colors" />
+                    </button>
+                    <button
+                      onClick={() => startStudy(cat)}
+                      className="p-6 bg-slate-100 border-2 border-transparent hover:border-slate-300 rounded-3xl text-slate-600 transition-all active:scale-[0.98]"
+                      title="Study Mode"
+                    >
+                      <BookOpen className="w-6 h-6" />
+                    </button>
                   </div>
                 ))}
               </div>
@@ -624,7 +696,7 @@ export default function App() {
                 <div className="flex-grow flex flex-col items-center justify-center text-center">
                   <h3 className="text-6xl font-black mb-4 group-hover:scale-105 transition-transform">{activeWord.word}</h3>
                   <button 
-                    onClick={() => speak(activeWord.word, activeWord.language)}
+                    onClick={() => playWord(activeWord)}
                     className="p-4 bg-amber-50 rounded-full hover:bg-amber-100 transition-colors"
                   >
                     <Volume2 className="w-10 h-10 text-amber-500" />
@@ -732,7 +804,7 @@ export default function App() {
                       <motion.button 
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={() => speak(activeWord.word, activeWord.language)}
+                        onClick={() => playWord(activeWord)}
                         className="w-36 h-36 bg-amber-50 rounded-full flex items-center justify-center mb-8 group hover:bg-amber-100 transition-colors shadow-[inset_0_4px_10px_rgba(251,191,36,0.1)] relative"
                       >
                         <Volume2 className="w-20 h-20 text-amber-500 group-hover:scale-110 transition-transform" />
@@ -760,13 +832,7 @@ export default function App() {
                       
                       <div className="mt-8 flex gap-4 w-full">
                          <button
-                           onClick={() => {
-                             if (currentWordIndex > 0) {
-                               setCurrentWordIndex(prev => prev - 1);
-                               setUserInput("");
-                               setIsCorrect(null);
-                             }
-                           }}
+                           onClick={goToPreviousQuizWord}
                            disabled={currentWordIndex === 0}
                            className="flex-1 py-4 bg-slate-100 text-slate-400 rounded-2xl font-bold flex items-center justify-center gap-2 disabled:opacity-30"
                          >
@@ -810,6 +876,26 @@ export default function App() {
                       </div>
 
                       <div className="space-y-6 flex-grow ">
+                        {isCorrect === false && submittedAttempt && (
+                          <div className="grid grid-cols-1 gap-3 text-left sm:grid-cols-2">
+                            <div className="rounded-[28px] border border-red-100 bg-red-50 p-4">
+                              <span className="block text-[10px] font-black uppercase tracking-[0.2em] text-red-400">
+                                Your Spelling
+                              </span>
+                              <p className="mt-2 break-words text-2xl font-black text-red-600">
+                                {submittedAttempt}
+                              </p>
+                            </div>
+                            <div className="rounded-[28px] border border-emerald-100 bg-emerald-50 p-4">
+                              <span className="block text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500">
+                                Correct Spelling
+                              </span>
+                              <p className="mt-2 break-words text-2xl font-black text-emerald-700">
+                                {activeWord.word}
+                              </p>
+                            </div>
+                          </div>
+                        )}
                         {definition && (
                           <div className="bg-amber-50 text-amber-900 p-5 rounded-[32px] text-sm italic border border-amber-100">
                             {definition}
@@ -838,9 +924,23 @@ export default function App() {
                       </motion.div>
                     )}
                     {isCorrect === false && (
-                      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring" }}>
-                        <XCircle className="w-12 h-12 text-red-500" />
-                      </motion.div>
+                      isRevealed ? (
+                        <motion.button
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: "spring" }}
+                          onClick={dismissCorrectionCard}
+                          className="flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-500 shadow-sm ring-1 ring-red-100 transition hover:bg-red-100"
+                          title="Close correction"
+                          aria-label="Close correction"
+                        >
+                          <X className="h-6 w-6" />
+                        </motion.button>
+                      ) : (
+                        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring" }}>
+                          <XCircle className="w-12 h-12 text-red-500" />
+                        </motion.div>
+                      )
                     )}
                   </div>
                 </motion.div>

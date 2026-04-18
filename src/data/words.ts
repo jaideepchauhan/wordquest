@@ -1,7 +1,8 @@
 export interface WordItem {
   word: string;
   category: string;
-  language: "en-IN" | "hi-IN";
+  language: "en-IN";
+  audioKey: string;
   definition: string;
   example: string;
 }
@@ -12,13 +13,20 @@ interface WordContent {
   example: string;
 }
 
-type WordLanguage = WordItem["language"];
+const slugifyAudioKey = (value: string) =>
+  value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
 const buildWordList = (
   category: string,
-  language: WordLanguage,
+  language: WordItem["language"],
   entries: WordContent[],
-): WordItem[] => entries.map((entry) => ({ ...entry, category, language }));
+): WordItem[] =>
+  entries.map((entry, index) => ({
+    ...entry,
+    category,
+    language,
+    audioKey: `${slugifyAudioKey(category)}-${String(index + 1).padStart(3, "0")}`,
+  }));
 
 const ENGLISH_WORDS: WordContent[] = [
   { word: "flying", definition: "moving through the air", example: "The birds are flying over the lake." },
@@ -50,48 +58,6 @@ const ENGLISH_WORDS: WordContent[] = [
   { word: "forests", definition: "large areas filled with many trees", example: "Forests are home to many animals." },
   { word: "pine", definition: "a type of evergreen tree", example: "The pine tree stayed green in winter." },
   { word: "toward", definition: "in the direction of", example: "We walked toward the school gate." },
-];
-
-const HINDI_WORDS: WordContent[] = [
-  { word: "सवेरा", definition: "सुबह का समय", example: "सवेरा होते ही पक्षी गाने लगे।" },
-  { word: "उदय", definition: "ऊपर आना या निकलना", example: "सूरज का उदय पूर्व दिशा में होता है।" },
-  { word: "सूरज", definition: "दिन में रोशनी देने वाला तारा", example: "सूरज निकलते ही उजाला फैल गया।" },
-  { word: "आसमान", definition: "हमारे ऊपर फैला खुला आकाश", example: "पक्षी आसमान में उड़ रहे हैं।" },
-  { word: "अँधेरा", definition: "जब रोशनी न हो", example: "रात में बाहर अँधेरा हो जाता है।" },
-  { word: "चंदा", definition: "चाँद का प्यार भरा नाम", example: "बच्चे चंदा को देखकर खुश हुए।" },
-  { word: "पक्षी", definition: "उड़ने वाला जीव", example: "एक पक्षी पेड़ पर बैठा है।" },
-  { word: "चहक", definition: "मीठी आवाज करना", example: "सुबह चिड़ियाँ चहक उठीं।" },
-  { word: "कलियाँ", definition: "फूल बनने से पहले की छोटी बंद पंखुड़ियाँ", example: "गुलाब की कलियाँ कल खिलेंगी।" },
-  { word: "उपवन", definition: "छोटा सुंदर बगीचा", example: "हमारे घर के पास एक सुंदर उपवन है।" },
-  { word: "महक", definition: "अच्छी खुशबू", example: "फूलों की महक पूरे कमरे में फैल गई।" },
-  { word: "शीतल", definition: "ठंडा और सुख देने वाला", example: "शीतल हवा चल रही है।" },
-  { word: "मंद", definition: "धीमा या हल्का", example: "मंद पवन पेड़ों को हिला रही थी।" },
-  { word: "खेत", definition: "फसल उगाने की जमीन", example: "किसान खेत में काम कर रहा है।" },
-  { word: "बाग", definition: "फल या फूलों का बड़ा बगीचा", example: "आम के बाग में बहुत छाया थी।" },
-  { word: "मोती", definition: "सीप से मिलने वाला चमकीला दाना", example: "दादी ने मोती की माला पहनी।" },
-  { word: "मनहर", definition: "मन को बहुत अच्छा लगने वाला", example: "पहाड़ों का मनहर दृश्य सबको भा गया।" },
-  { word: "सुखद", definition: "जो अच्छा और आनंद देने वाला हो", example: "बारिश के बाद मौसम सुखद हो गया।" },
-  { word: "उजाला", definition: "रोशनी", example: "दीपक से कमरे में उजाला हो गया।" },
-  { word: "बादशाह", definition: "राजा या शासक", example: "कहानी का बादशाह महल में रहता था।" },
-  { word: "बस्ती", definition: "जहाँ लोग मिलकर रहते हैं", example: "नदी के पास एक छोटी बस्ती है।" },
-  { word: "बीरबल", definition: "अकबर के बुद्धिमान मंत्री का नाम", example: "बीरबल ने चतुराई से समस्या हल की।" },
-  { word: "सरदी", definition: "ठंड का मौसम या ठंड लगना", example: "सरदी में लोग ऊनी कपड़े पहनते हैं।" },
-  { word: "मेहनत", definition: "मन लगाकर किया गया काम", example: "मेहनत से सफलता मिलती है।" },
-  { word: "मशाल", definition: "हाथ में लेकर चलने वाली जलती हुई रोशनी", example: "अँधेरे रास्ते पर मशाल जलाई गई।" },
-  { word: "आनंद", definition: "खुशी", example: "खेल जीतकर बच्चों को बहुत आनंद हुआ।" },
-  { word: "खिचड़ी", definition: "चावल और दाल से बना भोजन", example: "माँ ने रात के खाने में खिचड़ी बनाई।" },
-  { word: "मूर्खता", definition: "बिना सोचे समझे किया गया गलत काम", example: "झूठ बोलना मूर्खता है।" },
-  { word: "ज़मीन", definition: "धरती या जमीन", example: "बच्चे ज़मीन पर बैठकर चित्र बना रहे थे।" },
-  { word: "बरतन", definition: "खाना पकाने या रखने के बर्तन", example: "रसोई में साफ बरतन सजे हैं।" },
-  { word: "पकवान", definition: "स्वादिष्ट बना हुआ भोजन", example: "त्योहार पर कई पकवान बने।" },
-  { word: "अनोखी", definition: "सबसे अलग और खास", example: "उसकी अनोखी सोच सबको पसंद आई।" },
-  { word: "दावत", definition: "भोज या खाने का निमंत्रण", example: "हमें शादी की दावत मिली।" },
-  { word: "राजा", definition: "राज्य का शासक", example: "कहानी का राजा न्यायप्रिय था।" },
-  { word: "सहायता", definition: "मदद", example: "मित्र ने होमवर्क में मेरी सहायता की।" },
-  { word: "खुशी", definition: "प्रसन्नता", example: "उपहार पाकर उसे बहुत खुशी हुई।" },
-  { word: "स्वाद", definition: "चखने पर महसूस होने वाला गुण", example: "आम का स्वाद मीठा होता है।" },
-  { word: "हर्ष", definition: "बहुत अधिक खुशी", example: "अच्छी खबर सुनकर सबको हर्ष हुआ।" },
-  { word: "व्यंजन", definition: "स्वादिष्ट भोजन या पकवान", example: "दावत में कई व्यंजन परोसे गए।" },
 ];
 
 const EVS_WORDS: WordContent[] = [
@@ -173,7 +139,6 @@ const SPICES_WORDS: WordContent[] = [
 
 export const WORD_LISTS: Record<string, WordItem[]> = {
   English: buildWordList("English", "en-IN", ENGLISH_WORDS),
-  Hindi: buildWordList("Hindi", "hi-IN", HINDI_WORDS),
   EVS: buildWordList("EVS", "en-IN", EVS_WORDS),
   Computer: buildWordList("Computer", "en-IN", COMPUTER_WORDS),
   Spices: buildWordList("Spices", "en-IN", SPICES_WORDS),
